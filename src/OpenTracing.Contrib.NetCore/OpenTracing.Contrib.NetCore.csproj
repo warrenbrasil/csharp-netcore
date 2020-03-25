@@ -8,6 +8,7 @@ Instrumented components: HttpClient calls, ASP.NET Core, Entity Framework Core a
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>OpenTracing.Contrib.NetStandard</PackageId>
     <Version>0.6.2</Version>
+    <RepositoryUrl>https://github.com/warrenbrasil/packages</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
