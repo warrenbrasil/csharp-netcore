@@ -42,7 +42,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IGlobalTracerAccessor, GlobalTracerAccessor>();
 
             services.TryAddSingleton<DiagnosticManager>();
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IHostedService, InstrumentationService>());
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IStatusHostedService, InstrumentationService>());
 
             var builderInstance = new OpenTracingBuilder(services);
 
