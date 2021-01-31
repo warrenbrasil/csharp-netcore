@@ -1,6 +1,7 @@
 [CmdletBinding(PositionalBinding = $false)]
 param(
-    [string] $Framework = "netcoreapp2.1"
+    [ValidateSet("net5.0", "netcoreapp3.1", "netcoreapp2.1")]
+    [string] $Framework = "net5.0"
 )
 
 dotnet build
@@ -11,23 +12,23 @@ Write-Host "Launching samples with framework $Framework"
 Start-Process `
     -FilePath powershell.exe `
     -ArgumentList @( "dotnet run -f $Framework --no-build; Read-Host 'Press enter to exit'" ) `
-    -WorkingDirectory "samples\CustomersApi"
-
-Start-Process `
-    -FilePath powershell.exe `
-    -ArgumentList @( "dotnet run -f $Framework --no-build; Read-Host 'Press enter to exit'" ) `
-    -WorkingDirectory "samples\OrdersApi"
+    -WorkingDirectory "samples\$Framework\CustomersApi"
 
 Start-Sleep -Seconds 2
 
 Start-Process `
     -FilePath powershell.exe `
     -ArgumentList @( "dotnet run -f $Framework --no-build; Read-Host 'Press enter to exit'" ) `
-    -WorkingDirectory "samples\FrontendWeb"
+    -WorkingDirectory "samples\$Framework\OrdersApi"
 
-if ($Framework -ne "netcoreapp2.0") {
-    Start-Process `
-        -FilePath powershell.exe `
-        -ArgumentList @( "dotnet run -f $Framework --no-build; Read-Host 'Press enter to exit'" ) `
-        -WorkingDirectory "samples\TrafficGenerator"
-}
+Start-Sleep -Seconds 5
+
+Start-Process `
+    -FilePath powershell.exe `
+    -ArgumentList @( "dotnet run -f $Framework --no-build; Read-Host 'Press enter to exit'" ) `
+    -WorkingDirectory "samples\$Framework\FrontendWeb"
+
+Start-Process `
+    -FilePath powershell.exe `
+    -ArgumentList @( "dotnet run -f $Framework --no-build; Read-Host 'Press enter to exit'" ) `
+    -WorkingDirectory "samples\$Framework\TrafficGenerator"

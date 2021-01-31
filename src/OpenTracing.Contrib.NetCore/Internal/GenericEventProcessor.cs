@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Tag;
 
 namespace OpenTracing.Contrib.NetCore.Internal
@@ -13,30 +12,23 @@ namespace OpenTracing.Contrib.NetCore.Internal
         private readonly ITracer _tracer;
         private readonly ILogger _logger;
         private readonly bool _isLogLevelTraceEnabled;
-        private readonly GenericEventOptions _options;
 
-        public GenericEventProcessor(string listenerName, ITracer tracer, ILogger logger, GenericEventOptions options)
+        public GenericEventProcessor(string listenerName, ITracer tracer, ILogger logger)
         {
             _listenerName = listenerName ?? throw new ArgumentNullException(nameof(listenerName));
             _tracer = tracer ?? throw new ArgumentNullException(nameof(tracer));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _options = options;
 
             _isLogLevelTraceEnabled = _logger.IsEnabled(LogLevel.Trace);
         }
 
-        public void ProcessEvent(string eventName, object untypedArg)
+        public void ProcessEvent(string eventName, object untypedArg, IEnumerable<KeyValuePair<string, string>> tags = null)
         {
             Activity activity = Activity.Current;
 
-            if (_options != null && _options.IsIgnored(_listenerName, eventName))
-            {
-                return;
-            }
-
             if (activity != null && eventName.EndsWith(".Start", StringComparison.Ordinal))
             {
-                HandleActivityStart(eventName, activity, untypedArg);
+                HandleActivityStart(eventName, activity, untypedArg, tags);
             }
             else if (activity != null && eventName.EndsWith(".Stop", StringComparison.Ordinal))
             {
@@ -44,11 +36,11 @@ namespace OpenTracing.Contrib.NetCore.Internal
             }
             else
             {
-                HandleRegularEvent(eventName, untypedArg);
+                HandleRegularEvent(eventName, untypedArg, tags);
             }
         }
 
-        private void HandleActivityStart(string eventName, Activity activity, object untypedArg)
+        private void HandleActivityStart(string eventName, Activity activity, object untypedArg, IEnumerable<KeyValuePair<string, string>> tags)
         {
             ISpanBuilder spanBuilder = _tracer.BuildSpan(activity.OperationName)
                 .WithTag(Tags.Component, _listenerName);
@@ -57,6 +49,14 @@ namespace OpenTracing.Contrib.NetCore.Internal
             {
                 spanBuilder.WithTag(tag.Key, tag.Value);
             }
+
+            if (tags != null)
+            {
+                foreach (var tag in tags)
+                {
+                    spanBuilder.WithTag(tag.Key, tag.Value);
+                }
+            } 
 
             spanBuilder.StartActive();
         }
@@ -74,13 +74,13 @@ namespace OpenTracing.Contrib.NetCore.Internal
             }
         }
 
-        private void HandleRegularEvent(string eventName, object untypedArg)
+        private void HandleRegularEvent(string eventName, object untypedArg, IEnumerable<KeyValuePair<string, string>> tags)
         {
-            ISpan span = _tracer.ActiveSpan;
+            var span = _tracer.ActiveSpan;
 
             if (span != null)
             {
-                span.Log(GetLogFields(eventName, untypedArg));
+                span.Log(GetLogFields(eventName, untypedArg, tags));
             }
             else if (_isLogLevelTraceEnabled)
             {
@@ -88,13 +88,21 @@ namespace OpenTracing.Contrib.NetCore.Internal
             }
         }
 
-        private Dictionary<string, object> GetLogFields(string eventName, object arg)
+        private Dictionary<string, object> GetLogFields(string eventName, object arg, IEnumerable<KeyValuePair<string, string>> tags)
         {
             var fields = new Dictionary<string, object>
                 {
                     { LogFields.Event, eventName },
                     { Tags.Component.Key, _listenerName }
                 };
+
+            if (tags != null)
+            {
+                foreach (var tag in tags)
+                {
+                    fields[tag.Key] = tag.Value;
+                }
+            }
 
             // TODO improve the hell out of this... :)
 

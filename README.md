@@ -1,11 +1,17 @@
+[![nuget](https://img.shields.io/nuget/v/OpenTracing.Contrib.NetCore.svg?logo=nuget)](https://www.nuget.org/packages/OpenTracing.Contrib.NetCore)
+
 # OpenTracing instrumentation for .NET Core apps
 
 This repository provides OpenTracing instrumentation for .NET Core based applications.
 It can be used with any OpenTracing compatible tracer.
 
+_**IMPORTANT:** OpenTracing and OpenCensus have merget to form **[OpenTelemetry](https://opentelemetry.io)**! The OpenTelemetry .NET library can be found at [https://github.com/open-telemetry/opentelemetry-dotnet](https://github.com/open-telemetry/opentelemetry-dotnet)._
+
 ## Supported .NET versions
 
-This project currently only supports apps targeting `netcoreapp2.0` (.NET Core 2.0) or higher!
+This project currently only supports apps targeting `netcoreapp2.1` (.NET Core 2.1), `netcoreapp3.1` (.NET Core 3.1) or net5.0 (.NET 5.0)!
+
+This project DOES NOT support the full .NET framework as that uses different instrumentation code.
 
 ## Supported libraries and frameworks
 
@@ -20,7 +26,9 @@ To further improve the tracing output, the library provides enhanced instrumenta
 
 * ASP.NET Core
 * Entity Framework Core
-* .NET Core BCL types (HttpClient)
+* System.Net.Http (HttpClient)
+* System.Data.SqlClient
+* Microsoft.Data.SqlClient
 
 #### Microsoft.Extensions.Logging based instrumentation
 
@@ -29,9 +37,8 @@ It will create `span.Log` calls for each logging event, however it will only cre
 
 ## Usage
 
-This project depends on several packages from Microsofts new `Microsoft.Extensions.*` stack (e.g. Dependency Injection, Logging)
-so its main use case is ASP.NET Core apps but it's also possible to instrument non-web based .NET Core apps like console apps, background services etc.
-if they also use this stack.
+This project depends on several packages from Microsofts `Microsoft.Extensions.*` stack (e.g. Dependency Injection, Logging)
+so its main use case is ASP.NET Core apps and any other Microsoft.Extensions-based console apps.
 
 ##### 1. Add the NuGet package `OpenTracing.Contrib.NetCore` to your project.
 
@@ -61,4 +68,4 @@ public static IWebHost BuildWebHost(string[] args)
 The service implements `IHostedService` so **it is automatically started in ASP.NET Core**,
 however if you have your own console host, you manually have to call `StartAsync` and `StopAsync`.
 
-Note that .NET Core 2.1 will greatly simplify this setup by introducing a generic `HostBuilder` that works similar to the existing `WebHostBuilder` from ASP.NET Core. Have a look at the `TrafficGenerator` sample for an example of a `HostBuilder` based console application.
+Note that .NET Core 2.1 greatly simplified this setup by introducing a generic `HostBuilder` that works similar to the existing `WebHostBuilder` from ASP.NET Core. Have a look at the `TrafficGenerator` sample for an example of a `HostBuilder` based console application.
